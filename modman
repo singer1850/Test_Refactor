@@ -1,0 +1,6 @@
+# Test_Refactor
+app/code/local/Test/Refactor/                            app/code/local/Test/Refactor/
+app/design/adminhtml/default/default/layout/test/        app/design/adminhtml/default/default/layout/test/
+app/design/adminhtml/default/default/template/test/      app/design/adminhtml/default/default/template/test/
+skin/adminhtml/default/default/test/                     skin/adminhtml/default/default/test/
+app/etc/modules/Test_Refactor.xml                        app/etc/modules/Test_Refactor.xml

@@ -1,0 +1,19 @@
+<script type="text/javascript">
+    //<![CDATA[
+    $(document).observe('dom:loaded', function () {
+        var rMenu1 = new RefactorMenu('<?php echo $this->getWindowUrl(); ?>', '<?php echo Mage::helper('test_refactor')->__('Configure Product Custom Options'); ?>');
+        rMenu1.initializeMenu();
+        $$('body > div').each(function (elem) {
+            elem.on('click', function () {
+                rMenu1.closePopupMenu(['custom-option-popup-menu','custom-option-popup-menu-item']);
+            })
+        });
+        $('html-body').on('keyup', function(event){
+            if ( (Event.KEY_ESC == event.keyCode) || (Event.KEY_ESC == event.which) ) {
+                rMenu1.closePopupMenu(['custom-option-popup-menu','custom-option-popup-menu-item']);
+            }
+        });
+
+    });
+    //]]>
+</script>

@@ -1,0 +1,226 @@
+<?php
+$orderId = $this->getResponse();
+?>
+<div id="options-refactor" class="entry-edit">
+    <div>
+        <h4><?php echo Mage::helper('test_refactor')->__('Custom Options'); ?></h4>
+    </div>
+    <form id="options-refactor-form" enctype="multipart/form-data" action="<?php echo Mage::helper('adminhtml')->getUrl('adminhtml/refactor_options/set', array('order_id' => $orderId)); ?>" method="post">
+        <fieldset>
+            <input type="hidden" name="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>" />
+            <table width="100%" cellspacing="0">
+                <tbody>
+                <?php
+                $order = Mage::getModel('sales/order')->load($orderId);
+                $items = $order->getAllVisibleItems();
+
+                $price = 0;
+                $disabled = false;
+                foreach ($items as $item):
+                    $options = $item->getProductOptions();
+                    if ( is_array($options) ):
+                    if ( (isset($options['info_buyRequest']['options']))
+                        && (!(empty($options['info_buyRequest']['options'])))
+                        && (is_array($options['info_buyRequest']['options'])) ):
+                            $optionsSimple = $item->getBuyRequest()->getData('options');
+                            foreach ($optionsSimple as $key => $value):
+                                $option = $item->getProduct()->getOptionById($key);
+                                if (!empty($option)):
+                                    if ( ($option['type'] == 'radio') || ($option['type'] == 'drop_down')
+                                        || ($option['type'] == 'checkbox') || ($option['type'] == 'multiple') ) {
+                                        foreach ($option->getValues() as $v) {
+                                            if ($v['option_type_id'] == $value) {
+                                                $price = $v->getPrice();
+                                            }
+                                        }
+                                    } else {
+                                        $price = $option['price'];
+                                    }
+                                    $disabled = ($price > 0) ? true : false;
+                ?>
+                <tr>
+                    <td class="label">
+                        <label>
+                            <?php echo Mage::helper('test_refactor')->__($option['title']); ?><?php echo ($option['is_require']) ? '&nbsp;<span class="required">*</span>' : ''; ?>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-ele">
+                        <?php switch ($option['type']):
+                            case 'field' :?>
+                        <input class="input-text<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" type="text" id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id']; ?>" name="options[<?php echo $option['option_id']; ?>]" value="<?php echo $value; ?>" <?php echo ($disabled) ? 'disabled ' : ''; ?>/>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'area' : ?>
+                        <textarea <?php echo ($option['is_require']) ? 'class="required-entry" ' : ''; ?>style="height:8em;" id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id']; ?>" name="options[<?php echo $option['option_id']; ?>]" <?php echo ($disabled) ? 'disabled ' : ''; ?>><?php echo $value; ?></textarea>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'radio' : ?>
+                        <?php foreach ($option->getValues() as $v): ?>
+                        <input class="input-text<?php echo ($option['is_require']) ? ' validate-one-required-by-name' : ''; ?>" type="radio" id="<?php echo preg_replace('/\s+/','_', strtolower($v->getTitle())) . '_' . $v->getId(); ?>" name="options[<?php echo $option['option_id']; ?>]" value="<?php echo $v->getId();?>" <?php echo ($v['option_type_id'] == $value) ? 'checked ' : ''; ?><?php echo ($disabled) ? 'disabled ' : ''; ?>/><span class="label"><label for="<?php echo preg_replace('/\s+/','_', strtolower($v->getTitle())) . '_' . $v->getId(); ?>"><?php echo $v->getTitle(); ?></label></span><br />
+                        <?php endforeach; ?>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'drop_down' : ?>
+                        <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id']; ?>" class="<?php echo ($option['is_require']) ? 'required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>]" title="" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                            <option value="">-- <?php echo Mage::helper('test_refactor')->__('Please Select'); ?> --</option>
+                            <?php foreach ($option->getValues() as $v): ?>
+                            <option value="<?php echo $v->getId(); ?>" <?php echo ($v['option_type_id'] == $value) ? ' selected ' : ''; ?>><?php echo $v->getTitle(); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'multiple' : ?>
+                        <select multiple id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id']; ?>" class="<?php echo ($option['is_require']) ? 'required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][]" title="" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                            <?php if (is_array($value)): ?>
+                            <?php foreach ($option->getValues() as $k => $v): ?>
+                                <option value="<?php echo $k; ?>" <?php foreach ($value as $valueKey => $valueValue) { echo ($k == $valueValue) ? 'selected ' : '';} ?>><?php echo $v->getTitle(); ?></option>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'checkbox' : ?>
+                        <?php if (is_array($value)): ?>
+                        <?php foreach ($option->getValues() as $k => $v): ?>
+                        <input class="checkbox input-text<?php echo ($option['is_require']) ? ' validate-one-required-by-name' : ''; ?>" type="checkbox" id="<?php echo preg_replace('/\s+/','_', strtolower($v->getTitle())) . '_' . $v->getId(); ?>" name="options[<?php echo $option['option_id']; ?>][]" value="<?php echo $k; ?>" <?php foreach ($value as $valueKey => $valueValue) { echo ($k == $valueValue) ? 'checked ' : '';} ?><?php echo ($disabled) ? 'disabled ' : ''; ?>/><span class="label"><label for="<?php echo preg_replace('/\s+/','_', strtolower($v->getTitle())) . '_' . $v->getId(); ?>"><?php echo $v->getTitle(); ?></label></span><br />
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'date' : ?>
+                        <input type="hidden" name="options[<?php echo $option['option_id']; ?>][date_type]" value="date" />
+                        <span class="datetime-picker">
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_month'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Month'); ?>" class="validate-date-month datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][month]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 13; $i++): ?>
+                                <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['month'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_day'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Day'); ?>" class="validate-date-day datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][day]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 32; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['day'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_year'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Year'); ?>" class="validate-date-year datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][year]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = date('Y'); $i > 1899; $i--): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['year'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </span>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'date_time' : ?>
+                        <input type="hidden" name="options[<?php echo $option['option_id']; ?>][date_type]" value="date_time" />
+                        <span class="datetime-picker">
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_month'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Month'); ?>" class="validate-date-month datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][month]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 13; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['month'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_day'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Day'); ?>" class="validate-date-day datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][day]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 32; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['day'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_year'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Year'); ?>" class="validate-date-year datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][year]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = date('Y'); $i > 1899; $i--): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['year'] == $i) ? ' selected' : ''; ?>><?php echo $i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_hour'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Hour'); ?>" class="datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][hour]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 13; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['hour'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <strong>:</strong>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_minute'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Minute'); ?>" class="datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][minute]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 0; $i < 60; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['minute'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_day_part'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Day Part'); ?>" class="datetime picker-increased<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][day_part]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <?php $dayP = array(0 => 'am', 1 => 'pm'); foreach ($dayP as $dp): ?>
+                                    <option value="<?php echo $dp; ?>"<?php echo ($optionsSimple[$key]['day_part'] == $dp) ? ' selected' : ''; ?>><?php echo strtoupper($dp); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </span>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'time' : ?>
+                        <input type="hidden" name="options[<?php echo $option['option_id']; ?>][date_type]" value="time" />
+                        <span class="time-picker">
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_hour'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Hour'); ?>" class="datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][hour]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 1; $i < 13; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['hour'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <strong>:</strong>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_minute'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Minute'); ?>" class="datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][minute]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <option value="">--</option>
+                                <?php for ($i = 0; $i < 60; $i++): ?>
+                                    <option value="<?php echo $i; ?>"<?php echo ($optionsSimple[$key]['minute'] == $i) ? ' selected' : ''; ?>><?php echo ($i < 10)?'0'.$i:$i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id'] . '_day_part'; ?>" title="<?php echo Mage::helper('test_refactor')->__('Day Part'); ?>" class="datetime picker-simple<?php echo ($option['is_require']) ? ' required-entry' : ''; ?>" name="options[<?php echo $option['option_id']; ?>][day_part]" <?php echo ($disabled) ? 'disabled ' : ''; ?>>
+                                <?php $dayP = array(0 => 'am', 1 => 'pm'); foreach ($dayP as $dp): ?>
+                                    <option value="<?php echo $dp; ?>"<?php echo ($optionsSimple[$key]['day_part'] == $dp) ? ' selected' : ''; ?>><?php echo strtoupper($dp); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </span>
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php case 'file' : ?>
+                        <input type="hidden" name="options[<?php echo $option['option_id']; ?>][is_file]" value="true" />
+                        <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo $this->getPostMaxSize(); ?>" />
+                        <input id="<?php echo preg_replace('/\s+/','_', strtolower($option['title'])) . '_' . $option['option_id']; ?>" type="file" name="options_<?php echo $option['option_id']; ?>" />
+                        <?php echo ($disabled) ? '<br /><small class="notice-fild">' . Mage::helper('test_refactor')->__('Field disabled for editing') . '</small>' : ''; ?>
+                        <?php break; ?>
+                        <?php default : ?>
+                        <p><small class="notice-fild"><?php echo Mage::helper('test_refactor')->__('The type of custom option is not supported'); ?></small></p>
+                        <?php endswitch; ?>
+                    </td>
+                </tr>
+                                <?php else: ?>
+                                    <tr>
+                                        <td>
+                                            <?php echo Mage::helper('test_refactor')->__('Option was deleted from product'); ?>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                    <?php endif; ?>
+                <?php if ( (isset($options['info_buyRequest']['qty'])) && !(empty($options['info_buyRequest']['qty'])) ): ?>
+                <tr>
+                    <td class="quantity">
+                        <label>
+                            <strong><?php echo Mage::helper('test_refactor')->__('Quantity'); ?></strong>
+                        </label>
+                        <input class="input-text" type="text" id="" name="" value="<?php echo $options['info_buyRequest']['qty']; ?>" disabled /><br />
+                        <small class="notice-fild"><?php echo Mage::helper('test_refactor')->__('Field disabled for editing'); ?></small>
+                    </td>
+                </tr>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+                <tr>
+                    <td class="a-right" style="padding-top:5px;">
+                        <button id="options-changes-cancel" ><?php echo Mage::helper('test_refactor')->__('Cancel'); ?></button>
+                        <button type="submit" id="options-changes-submit"><?php echo Mage::helper('test_refactor')->__('OK'); ?></button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </fieldset>
+    </form>
+</div>
+<div class="clear"></div>
