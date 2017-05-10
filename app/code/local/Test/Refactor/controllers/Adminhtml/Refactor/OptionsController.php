@@ -83,7 +83,7 @@ class Test_Refactor_Adminhtml_Refactor_OptionsController extends Mage_Adminhtml_
                                             }
                                             if ($price > 0) {
                                                 $edited = false;
-                                                $result['message_warning'][$i] = $this->__('The option "' . $optionTmp['title'] . '" has price more than 0. It would cause to change the final order price.');
+                                                $result['message_warning'][$i] = $this->__('The option "%s" has price more than 0. It would cause to change the final order price.', $optionTmp['title']);
                                                 continue;
                                             }
                                             //-----price checking end-----
