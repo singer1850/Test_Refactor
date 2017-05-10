@@ -52,7 +52,7 @@ class Test_Refactor_Adminhtml_Refactor_OptionsController extends Mage_Adminhtml_
         if ($this->getRequest()->isAjax()) {
             try {
                 if (empty($order)) {
-                    throw new Exception('This order no exists.');
+                    throw new Exception($this->__('This order no exists.'));
                 }
 
                 if (!(empty($updateOptions))) {
@@ -69,7 +69,7 @@ class Test_Refactor_Adminhtml_Refactor_OptionsController extends Mage_Adminhtml_
                                             $optionTmp = $item->getProduct()->getOptionById($key2);
                                             if (empty($optionTmp)) {
                                                 $edited = false;
-                                                throw new Exception('This custom option no longer exists at product.');
+                                                throw new Exception($this->__('This custom option no longer exists at product.'));
                                             }
                                             if ( ($optionTmp['type'] == 'radio') || ($optionTmp['type'] == 'drop_down')
                                                 || ($optionTmp['type'] == 'checkbox') || ($optionTmp['type'] == 'multiple') ) {
@@ -83,7 +83,7 @@ class Test_Refactor_Adminhtml_Refactor_OptionsController extends Mage_Adminhtml_
                                             }
                                             if ($price > 0) {
                                                 $edited = false;
-                                                $result['message_warning'][$i] = 'The option "' . $optionTmp['title'] . '" has price more than 0. It would cause to change the final order price.';
+                                                $result['message_warning'][$i] = $this->__('The option "' . $optionTmp['title'] . '" has price more than 0. It would cause to change the final order price.');
                                                 continue;
                                             }
                                             //-----price checking end-----
@@ -146,7 +146,7 @@ class Test_Refactor_Adminhtml_Refactor_OptionsController extends Mage_Adminhtml_
 
 
                                             } elseif ( (isset($updateOptions[$key2]['is_file'])) && (empty($_FILES['options_' . $key2]['name'])) ) {
-                                                throw new Exception('The file maybe too large.');
+                                                throw new Exception($this->__('The file maybe too large.'));
                                             }
                                             if ((empty($dateVar[$key2])) || (empty($fileVar[$key2]))) {
                                                 $options['info_buyRequest']['options'][$key1] = $updateOptions[$key2];
